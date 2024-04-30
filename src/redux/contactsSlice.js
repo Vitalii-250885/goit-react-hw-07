@@ -1,4 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
+import {
+  addContactThunk,
+  fetchContactsThunk,
+  deleteContactThunk,
+} from "./contactsOps";
 
 const initialState = {
   items: [],
@@ -6,36 +11,47 @@ const initialState = {
   error: null,
 };
 
+const isPanding = (action) =>
+  typeof action.type === "string" && action.type.endsWith("/pending");
+const isRejected = (action) =>
+  typeof action.type === "string" && action.type.endsWith("/rejected");
+
 export const contactsSlice = createSlice({
   name: "contacts",
   initialState,
-  reducers: {
-    // addContact: {
-    //   reducer: (state, action) => {
-    //     state.items.push(action.payload);
-    //   },
-    //   prepare: (contact) => {
-    //     return {
-    //       payload: {
-    //         ...contact,
-    //         id: nanoid(),
-    //       },
-    //     };
-    //   },
-    // },
-    // deleteContact: (state, action) => {
-    //   return {
-    //     items: state.items.filter((contact) => contact.id !== action.payload),
-    //   };
-    // },
-    // fetchingInProgres: (state, action) => {},
-    // fetchingSuccess: (state, action) => {},
-    // fetchingError: (state, action) => {},
+  extraReducers: (builder) => {
+    builder
+
+      .addCase(fetchContactsThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+
+      .addCase(deleteContactThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+
+      .addCase(addContactThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+
+      .addMatcher(isPanding, (state) => {
+        state.error = null;
+        state.items = [];
+        state.loading = true;
+      })
+      .addMatcher(isRejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { addContact, deleteContact } = contactsSlice.actions;
+export const { fetchingInProgres, fetchingSuccess, fetchingError } =
+  contactsSlice.actions;
 
 export const contactsReducer = contactsSlice.reducer;
 
-export const selectContacts = (state) => state.contacts.items;
+export const selectContacts = (state) => state.contacts;
